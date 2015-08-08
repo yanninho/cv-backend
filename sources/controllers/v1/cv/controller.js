@@ -1,63 +1,35 @@
 'use strict';
 
 var CV = require('../../../models/cv'),
-    requestName = 'cv',
-    maxResultPossible = 1,
-    _ = require("underscore"),
-    RSVP = require('rsvp'),
-    requestProcess = require('reqrestextract');
+    _ = require("underscore");
 
-function count(infos) {
-	return new RSVP.Promise(function(resolve, reject) {
-		return CV.count().exec().then(function(res) {
-			infos.count = res;
-			if (infos.range.limit === maxResultPossible && res > 0) {
-				infos.range.limit = res;
-			}
-			resolve(infos);
-		});
-	});
+exports.init = function(req, res, next) {
+	req.resourceName = 'cv';
+	req.maxResult = 1;
+	next();
 }
 
-function find(infos) {
-	return new RSVP.Promise(function(resolve, reject) {
-			var req = CV.find({});
-			req = requestProcess.addRange(req, infos.range);										
-			return req.exec().then(function(res) {
-				infos.result = res;
-				resolve(infos);
-			});
-	});
+exports.endFind = function(req, res, next) {
+	var status = 200;		 
+    if (req.result.length < req.count) {
+    	status = 206;
+    }
+    return res.status(status).json(req.result);
 }
 
-exports.find = function(req, res) {
-
-	function setAcceptRange() {
-		res.setHeader('Accept-Range', requestName + ' ' + maxResultPossible);
-	}
-	
-	function reject(error) {
-		setAcceptRange();
-		return res.status(error.status).send({reason : error.reason});
+exports.find = function(req, res, next) {
+	req.count = 1;
+	if (req.happyRest.range && req.happyRest.range.limit === req.maxResult && res > 0) {
+		req.happyRest.range.limit = req.count;
 	}
 
-	function end(infos) {
-		res.setHeader('Content-Range', infos.range.offset + '-' + infos.range.limit + '/'+ infos.count );
-		setAcceptRange();
-		var status = 200;
-		if (infos.result.length < infos.count) {
-			status = 206;
-		}
-		return res.status(status).json(infos.result);		
-	}
-
-	req.maxResultPossible = maxResultPossible;
-	requestProcess.prepare(req, reject)
-	.then(requestProcess.range, reject)
-	.then(requestProcess.fields, reject)
-	.then(count, reject)
-	.then(find, reject)
-	.then(requestProcess.format, reject)
-	.then(end);
+	var range = req.happyRest.range;
+	var mongoReq = CV.find();			
+	//add range
+	mongoReq.skip(range.offset).limit(range.limit - range.offset);
+	mongoReq.exec().then(function(res) {
+		req.result = res;
+		next();
+	});	
   
 };

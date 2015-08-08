@@ -17,9 +17,9 @@ module.exports = function(app, config) {
 
 		app.use(function(req, res, next){
 			res.header('Access-Control-Allow-Credentials', true);
-			res.header('Access-Control-Allow-Origin', req.headers.origin);
 			res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
 			res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Cache-Control');
+			res.header('content-type', 'application/json; charset=utf-8');
 			if (req.method === 'OPTIONS') {
 				res.statusCode = 204;
 				return res.end();

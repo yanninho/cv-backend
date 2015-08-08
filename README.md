@@ -1,3 +1,5 @@
+mongod --dbpath "C:\Program Files\MongoDB\data" --smallfiles
+
 {
     "_id" : 0,
     "informations" : {
