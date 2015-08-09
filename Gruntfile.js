@@ -94,7 +94,7 @@ module.exports = function (grunt) {
                 {
                     expand: true,
                     cwd: 'sources',
-                    dest: 'dist/server',
+                    dest: 'dist/',
                     src: [
                         '**/*'
                     ]
